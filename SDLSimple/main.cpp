@@ -334,14 +334,14 @@ void update()
     // ———— PART 3 ———— //
 
     // ———— RESETTING MODEL MATRICES ———— //
-    g_character_model_matrix = glm::mat4(1.0f);
-    g_frame_model_matrix = glm::mat4(1.0f);
+    //g_character_model_matrix = glm::mat4(1.0f);
+    //g_frame_model_matrix = glm::mat4(1.0f);
 
-    g_character_model_matrix = glm::translate(g_character_model_matrix, ORIGIN);
-    g_frame_model_matrix = glm::translate(g_frame_model_matrix, ORIGIN);
+    //g_character_model_matrix = glm::translate(g_character_model_matrix, ORIGIN);
+    //g_frame_model_matrix = glm::translate(g_frame_model_matrix, ORIGIN);
 
-    g_frame_model_matrix = glm::scale(g_frame_model_matrix, DOUBLE);
-    g_character_model_matrix = glm::scale(g_character_model_matrix, DOUBLE * 0.75f);
+    //g_frame_model_matrix = glm::scale(g_frame_model_matrix, DOUBLE);
+    //g_character_model_matrix = glm::scale(g_character_model_matrix, DOUBLE * 0.75f);
 }
 
 void render() {
