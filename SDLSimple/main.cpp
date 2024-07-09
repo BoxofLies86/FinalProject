@@ -1,3 +1,13 @@
+/**
+* Author: Joseph Lin
+* Assignment: Lunar Lander
+* Date due: 2024-07-13, 11:59pm
+* I pledge that I have completed this assignment without
+* collaborating with anyone else, in conformance with the
+* NYU School of Engineering Policies and Procedures on
+* Academic Misconduct.
+**/
+
 #define GL_SILENCE_DEPRECATION
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -20,10 +30,12 @@ enum Coordinate
     y_coordinate
 };
 
+//enum Direction { LEFT, RIGHT, UP, DOWN };
+
 #define LOG(argument) std::cout << argument << '\n'
 
-const int WINDOW_WIDTH = 640,
-WINDOW_HEIGHT = 480;
+const int WINDOW_WIDTH = 500*2,
+WINDOW_HEIGHT = 400*2;
 
 const float BG_RED = 0.9608f,
 BG_BLUE = 0.9608f,
@@ -39,7 +51,7 @@ const char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
 F_SHADER_PATH[] = "shaders/fragment_textured.glsl";
 
 const float MILLISECONDS_IN_SECOND = 1000.0;
-const float DEGREES_PER_SECOND = 90.0f;
+//const float DEGREES_PER_SECOND = 90.0f;
 
 const glm::vec3 ORIGIN = glm::vec3(0.0f, 0.0f, 0.0f),
 DOUBLE = glm::vec3(2.0f, 2.0f, 0.0f);
@@ -48,14 +60,9 @@ const int NUMBER_OF_TEXTURES = 1;
 const GLint LEVEL_OF_DETAIL = 0;
 const GLint TEXTURE_BORDER = 0;
 
-const char PLAYER_SPRITE_FILEPATH[] = "sprites/sonic.png",
-FRAME_SPRITE_FILEPATH[] = "sprites/frame.png",
-FONT_SPRITE_FILEPATH[] = "sprites/font1.png";
-
-const int CHARACTER_SHEET_ROWS = 1,
-CHARACTER_SHEET_COLS = 4,
-FRAME_ROWS = 1,
-FRAME_COLS = 1;
+const char SHIP_SPRITE_FILEPATH[] = "sprites/spaceship_spritesheet.png";
+//FRAME_SPRITE_FILEPATH[] = "sprites/frame.png",
+//FONT_SPRITE_FILEPATH[] = "sprites/font1.png";
 
 const int FONTBANK_SIZE = 16,
 FRAMES_PER_SECOND = 4;
@@ -67,25 +74,50 @@ bool g_is_growing = true;
 ShaderProgram g_shader_program;
 
 glm::mat4 g_view_matrix,
-g_character_model_matrix,
-g_frame_model_matrix,
-g_projection_matrix;
+          g_ship_model_matrix,
+          //g_frame_model_matrix,
+          g_projection_matrix;
 
 float g_previous_ticks = 0.0f;
 
-GLuint g_character_texture_id,
-g_frame_texture_id,
-g_text_texture_id;
+GLuint g_ship_texture_id;
+//g_frame_texture_id,
+//g_text_texture_id;
 
 // ———— PART 1 ———— //
-constexpr int SPRITESHEET_DIMENSIONS = 4;
+glm::vec3 g_ship_movement = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 g_ship_position = glm::vec3(0.0f, 0.0f, 0.0f);
+float g_ship_speed = 1.0f;
+
+bool is_moving = false;
+constexpr int SPRITESHEET_DIMENSIONS_COLUMNS = 4;
+constexpr int SPIRTESHEET_DIMENSIONS_ROWS = 2;
+constexpr int LEFT = 2,
+              RIGHT = 1,
+              UP = 0,
+              DOWN = 3;
+
+
 bool s_key = false;
-int g_animation_indices[4] = { 0, 1, 2, 3 };
-float frame_tracker = 0.0f;
-float g_animation_time = 0.0f;
-int g_animation_frames = SPRITESHEET_DIMENSIONS;
+bool w_key = false;
+bool a_key = false;
+bool d_key = false;
+
+int g_ship_flying[4][2] =
+{
+    {0, 4}, //up
+    {1, 5}, //right
+    {2, 6}, //left
+    {3, 7}  //down
+};
+
+int* g_animation_indices = g_ship_flying[DOWN];
+
+//float frame_tracker = 0.0f;
+//float g_animation_time = 0.0f;
+//int g_animation_frames = SPRITESHEET_DIMENSIONS;
 int g_animation_index = 0;
-constexpr int SECONDS_PER_FRAME = 4;
+//constexpr int SECONDS_PER_FRAME = 4;
 
 // ———— PART 1 ———— //
 
@@ -246,23 +278,23 @@ void initialise()
     g_view_matrix = glm::mat4(1.0f);  // Defines the position (location and orientation) of the camera
     g_projection_matrix = glm::ortho(-5.0f, 5.0f, -3.75f, 3.75f, -1.0f, 1.0f);  // Defines the characteristics of your camera, such as clip planes, field of view, projection method etc.
 
-    // ————— CHARACTER ———— //
-    g_character_model_matrix = glm::mat4(1.0f);
+
+    g_ship_model_matrix = glm::mat4(1.0f);
     g_shader_program.set_projection_matrix(g_projection_matrix);
     g_shader_program.set_view_matrix(g_view_matrix);
 
     glUseProgram(g_shader_program.get_program_id());
-    g_character_texture_id = load_texture(PLAYER_SPRITE_FILEPATH);
+    g_ship_texture_id = load_texture(SHIP_SPRITE_FILEPATH);
 
     // ————— FRAME ———— //
-    g_frame_model_matrix = glm::mat4(1.0f);
+    //g_frame_model_matrix = glm::mat4(1.0f);
+    //
+    //glUseProgram(g_shader_program.get_program_id());
+    //g_frame_texture_id = load_texture(FRAME_SPRITE_FILEPATH);
 
-    glUseProgram(g_shader_program.get_program_id());
-    g_frame_texture_id = load_texture(FRAME_SPRITE_FILEPATH);
-
-    // ———— TEXT ———— //
-    glUseProgram(g_shader_program.get_program_id());
-    g_text_texture_id = load_texture(FONT_SPRITE_FILEPATH);
+    //// ———— TEXT ———— //
+    //glUseProgram(g_shader_program.get_program_id());
+    //g_text_texture_id = load_texture(FONT_SPRITE_FILEPATH);
 
     // ————— GENERAL ———— //
     glClearColor(BG_RED, BG_BLUE, BG_GREEN, BG_OPACITY);
@@ -272,6 +304,8 @@ void initialise()
 
 void process_input()
 {
+    g_ship_movement = glm::vec3(0.0f);
+
     SDL_Event event;
 
     while (SDL_PollEvent(&event))
@@ -288,12 +322,14 @@ void process_input()
                 g_game_is_running = false;
                 break;
 
-                // ———— PART 2 ———— //
-            case SDLK_s:
-                s_key = true;
-                break;
-
-                // ———— PART 2 ———— //
+            //case SDLK_DOWN:
+            //    g_ship_movement.y = -3.0f;
+            //    g_animation_indices = g_ship_flying[DOWN];
+            //    break;
+            //case SDLK_RIGHT:
+            //    g_ship_movement.x = 1.0f;
+            //    g_animation_indices = g_ship_flying[RIGHT];
+            //    break;
 
             default:
                 break;
@@ -301,6 +337,57 @@ void process_input()
         default:
             break;
         }
+    }
+    const Uint8* key_state = SDL_GetKeyboardState(NULL);
+
+    if (key_state[SDL_SCANCODE_LEFT])
+    {
+        g_ship_movement.x = -1.0f;
+        a_key = true;
+        is_moving = true;
+        g_animation_indices = g_ship_flying[LEFT];
+    }
+    //else
+    //{
+    //    is_moving = false;
+    //}
+    else if (key_state[SDL_SCANCODE_RIGHT])
+    {
+        g_ship_movement.x = 1.0f;
+        d_key = true;
+        is_moving = true;
+        g_animation_indices = g_ship_flying[RIGHT];
+    }
+    //else
+    //{
+    //    is_moving = false;
+    //}
+
+    else if (key_state[SDL_SCANCODE_UP])
+    {
+        g_ship_movement.y = 1.0f;
+        w_key = true;
+        is_moving = true;
+        g_animation_indices = g_ship_flying[UP];
+    }
+    //else 
+    //{
+    //    is_moving = false;
+    //}
+    else if (key_state[SDL_SCANCODE_DOWN])
+    {
+        g_ship_movement.y = -3.0f;
+        s_key = true;
+        is_moving = true;
+        g_animation_indices = g_ship_flying[DOWN];
+    }
+    else { is_moving = false; }
+
+
+
+    if (glm::length(g_ship_movement) > 1.0f)
+    {
+        g_ship_movement = glm::normalize(g_ship_movement);
     }
 }
 
@@ -311,53 +398,34 @@ void update()
     float delta_time = ticks - g_previous_ticks; // the delta time is the difference from the last frame
     g_previous_ticks = ticks;
 
-
-
-    // ———— PART 3 ———— //
-    if (s_key == false)
+    if (is_moving) 
     {
-        g_animation_time += delta_time;
-        float frames_per_second = (float)1 / SECONDS_PER_FRAME;
-
-        if (g_animation_time >= frames_per_second)
-        {
-            g_animation_time = 0.0f;
-            g_animation_index++;
-
-            if (g_animation_index >= g_animation_frames)
-            {
-                g_animation_index = 0;
-            }
-        }
+        g_animation_index = 1;
     }
+    else { g_animation_index = 0; }
 
-    // ———— PART 3 ———— //
+    g_ship_position += g_ship_movement * g_ship_speed * delta_time;
 
-    // ———— RESETTING MODEL MATRICES ———— //
-    //g_character_model_matrix = glm::mat4(1.0f);
-    //g_frame_model_matrix = glm::mat4(1.0f);
+    g_ship_model_matrix = glm::mat4(1.0f);
+    g_ship_model_matrix = glm::translate(g_ship_model_matrix, g_ship_position);
 
-    //g_character_model_matrix = glm::translate(g_character_model_matrix, ORIGIN);
-    //g_frame_model_matrix = glm::translate(g_frame_model_matrix, ORIGIN);
-
-    //g_frame_model_matrix = glm::scale(g_frame_model_matrix, DOUBLE);
-    //g_character_model_matrix = glm::scale(g_character_model_matrix, DOUBLE * 0.75f);
+   
 }
 
 void render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    g_shader_program.set_model_matrix(g_character_model_matrix);
-
+    
+    g_shader_program.set_model_matrix(g_ship_model_matrix);
     // ———— PART 4 ———— //
-    draw_sprite_from_texture_atlas(&g_shader_program, g_character_texture_id, g_animation_indices[g_animation_index], CHARACTER_SHEET_ROWS, CHARACTER_SHEET_COLS);
+    draw_sprite_from_texture_atlas(&g_shader_program, g_ship_texture_id, g_animation_indices[g_animation_index], SPIRTESHEET_DIMENSIONS_ROWS, SPRITESHEET_DIMENSIONS_COLUMNS);
     // ———— PART 4 ———— //
-
-    g_shader_program.set_model_matrix(g_frame_model_matrix);
+    
+    /*g_shader_program.set_model_matrix(g_frame_model_matrix);
     draw_sprite_from_texture_atlas(&g_shader_program, g_frame_texture_id, 0, FRAME_ROWS, FRAME_COLS);
-
+    
     draw_text(&g_shader_program, g_text_texture_id, std::string("PRESS S TO"), 0.25f, 0.0f, glm::vec3(-1.25f, 2.0f, 0.0f));
-    draw_text(&g_shader_program, g_text_texture_id, std::string("CHOOSE YOUR CHARACTER"), 0.25f, 0.01f, glm::vec3(-2.5f, 1.5f, 0.0f));
+    draw_text(&g_shader_program, g_text_texture_id, std::string("CHOOSE YOUR CHARACTER"), 0.25f, 0.01f, glm::vec3(-2.5f, 1.5f, 0.0f));*/
 
     SDL_GL_SwapWindow(g_display_window);
 }
