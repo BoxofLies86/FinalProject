@@ -1,3 +1,3 @@
-﻿  main.cpp
-C:\Users\josep\source\repos\SDLSimple\SDLSimple\main.cpp(137,23): warning C4018: '<': signed/unsigned mismatch
+﻿  Entity.cpp
+C:\Users\josep\source\repos\SDLSimple\SDLSimple\Entity.h(78,70): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
   SDLSimple.vcxproj -> C:\Users\josep\source\repos\SDLSimple\Debug\SDLSimple.exe

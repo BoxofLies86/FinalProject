@@ -23,6 +23,19 @@
 #include "ShaderProgram.h"
 #include "stb_image.h"
 #include <vector>
+#include "Entity.h"
+
+#include <ctime>
+#include "cmath"
+
+enum AppStatus { RUNNING, TERMINATED };
+
+struct GameState
+{
+    Entity* ship;
+};
+
+GameState g_state;
 
 enum Coordinate
 {
@@ -92,10 +105,10 @@ float g_ship_speed = 1.0f;
 bool is_moving = false;
 constexpr int SPRITESHEET_DIMENSIONS_COLUMNS = 4;
 constexpr int SPIRTESHEET_DIMENSIONS_ROWS = 2;
-constexpr int LEFT = 2,
-              RIGHT = 1,
-              UP = 0,
-              DOWN = 3;
+//constexpr int LEFT = 2,
+//              RIGHT = 1,
+//              UP = 0,
+//              DOWN = 3;
 
 
 bool s_key = false;
@@ -103,19 +116,13 @@ bool w_key = false;
 bool a_key = false;
 bool d_key = false;
 
-int g_ship_flying[4][2] =
-{
-    {0, 4}, //up
-    {1, 5}, //right
-    {2, 6}, //left
-    {3, 7}  //down
-};
 
-int* g_animation_indices = g_ship_flying[DOWN];
+
+//int* g_animation_indices = g_ship_flying[DOWN];
 
 //float frame_tracker = 0.0f;
-//float g_animation_time = 0.0f;
-//int g_animation_frames = SPRITESHEET_DIMENSIONS;
+float g_animation_time = 0.0f;
+int g_animation_frames = 2;
 int g_animation_index = 0;
 //constexpr int SECONDS_PER_FRAME = 4;
 
@@ -285,7 +292,20 @@ void initialise()
 
     glUseProgram(g_shader_program.get_program_id());
     g_ship_texture_id = load_texture(SHIP_SPRITE_FILEPATH);
+    
 
+    int g_ship_flying[4][2] =
+    {
+        {0, 4}, //up
+        {1, 5}, //right
+        {2, 6}, //left
+        {3, 7}  //down
+    };
+
+    g_state.ship = new Entity(g_ship_texture_id, g_ship_speed, g_ship_flying, g_animation_time, g_animation_frames,
+                    g_animation_index, SPRITESHEET_DIMENSIONS_COLUMNS, SPIRTESHEET_DIMENSIONS_ROWS);
+
+    g_state.ship->face_down();
     // ————— FRAME ———— //
     //g_frame_model_matrix = glm::mat4(1.0f);
     //
@@ -304,7 +324,7 @@ void initialise()
 
 void process_input()
 {
-    g_ship_movement = glm::vec3(0.0f);
+    g_state.ship->set_movement(glm::vec3(0.0f));
 
     SDL_Event event;
 
@@ -322,15 +342,6 @@ void process_input()
                 g_game_is_running = false;
                 break;
 
-            //case SDLK_DOWN:
-            //    g_ship_movement.y = -3.0f;
-            //    g_animation_indices = g_ship_flying[DOWN];
-            //    break;
-            //case SDLK_RIGHT:
-            //    g_ship_movement.x = 1.0f;
-            //    g_animation_indices = g_ship_flying[RIGHT];
-            //    break;
-
             default:
                 break;
             }
@@ -342,10 +353,10 @@ void process_input()
 
     if (key_state[SDL_SCANCODE_LEFT])
     {
-        g_ship_movement.x = -1.0f;
+        g_state.ship->move_left();
         a_key = true;
         is_moving = true;
-        g_animation_indices = g_ship_flying[LEFT];
+        //g_animation_indices = g_ship_flying[LEFT];
     }
     //else
     //{
@@ -353,10 +364,10 @@ void process_input()
     //}
     else if (key_state[SDL_SCANCODE_RIGHT])
     {
-        g_ship_movement.x = 1.0f;
+        g_state.ship->move_right();
         d_key = true;
         is_moving = true;
-        g_animation_indices = g_ship_flying[RIGHT];
+        //g_animation_indices = g_ship_flying[RIGHT];
     }
     //else
     //{
@@ -365,10 +376,10 @@ void process_input()
 
     else if (key_state[SDL_SCANCODE_UP])
     {
-        g_ship_movement.y = 1.0f;
+        g_state.ship->move_up();
         w_key = true;
         is_moving = true;
-        g_animation_indices = g_ship_flying[UP];
+        //g_animation_indices = g_ship_flying[UP];
     }
     //else 
     //{
@@ -376,18 +387,18 @@ void process_input()
     //}
     else if (key_state[SDL_SCANCODE_DOWN])
     {
-        g_ship_movement.y = -3.0f;
+        g_state.ship->move_down();
         s_key = true;
         is_moving = true;
-        g_animation_indices = g_ship_flying[DOWN];
+        //g_animation_indices = g_ship_flying[DOWN];
     }
     else { is_moving = false; }
 
 
 
-    if (glm::length(g_ship_movement) > 1.0f)
+    if (glm::length(g_state.ship->get_movement()) > 1.0f)
     {
-        g_ship_movement = glm::normalize(g_ship_movement);
+        g_state.ship->normalise_movement();
     }
 }
 
@@ -398,7 +409,10 @@ void update()
     float delta_time = ticks - g_previous_ticks; // the delta time is the difference from the last frame
     g_previous_ticks = ticks;
 
-    if (is_moving) 
+
+    g_state.ship->update(delta_time);
+
+    /*if (is_moving) 
     {
         g_animation_index = 1;
     }
@@ -407,7 +421,7 @@ void update()
     g_ship_position += g_ship_movement * g_ship_speed * delta_time;
 
     g_ship_model_matrix = glm::mat4(1.0f);
-    g_ship_model_matrix = glm::translate(g_ship_model_matrix, g_ship_position);
+    g_ship_model_matrix = glm::translate(g_ship_model_matrix, g_ship_position);*/
 
    
 }
@@ -415,11 +429,7 @@ void update()
 void render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    
-    g_shader_program.set_model_matrix(g_ship_model_matrix);
-    // ———— PART 4 ———— //
-    draw_sprite_from_texture_atlas(&g_shader_program, g_ship_texture_id, g_animation_indices[g_animation_index], SPIRTESHEET_DIMENSIONS_ROWS, SPRITESHEET_DIMENSIONS_COLUMNS);
-    // ———— PART 4 ———— //
+    g_state.ship->render(&g_shader_program);
     
     /*g_shader_program.set_model_matrix(g_frame_model_matrix);
     draw_sprite_from_texture_atlas(&g_shader_program, g_frame_texture_id, 0, FRAME_ROWS, FRAME_COLS);
