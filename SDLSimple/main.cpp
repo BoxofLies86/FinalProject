@@ -33,6 +33,9 @@ enum AppStatus { RUNNING, TERMINATED };
 struct GameState
 {
     Entity* ship;
+    Entity* map;
+    Entity* platforms;
+    Entity* wood;
 };
 
 GameState g_state;
@@ -49,6 +52,7 @@ enum Coordinate
 
 const int WINDOW_WIDTH = 500*2,
 WINDOW_HEIGHT = 400*2;
+
 
 const float BG_RED = 0.9608f,
 BG_BLUE = 0.9608f,
@@ -73,9 +77,18 @@ const int NUMBER_OF_TEXTURES = 1;
 const GLint LEVEL_OF_DETAIL = 0;
 const GLint TEXTURE_BORDER = 0;
 
+//TIMESTEP
+constexpr float FIXED_TIMESTEP = 1.0f / 60.0f;
+constexpr float ACC_OF_GRAVITY = -1.0f;
+constexpr int PLATFORM_COUNT = 5;
+float g_time_accumulator = 0.0f;
+
+
 const char SHIP_SPRITE_FILEPATH[] = "sprites/spaceship_spritesheet.png";
+const char MAP_SPRITE_FILEPATH[] = "sprites/lunar_platform.png";
+const char WOOD_SPRITE_FILEPATH[] = "sprites/wood_platform.png";
 //FRAME_SPRITE_FILEPATH[] = "sprites/frame.png",
-//FONT_SPRITE_FILEPATH[] = "sprites/font1.png";
+const char FONT_SPRITE_FILEPATH[] = "sprites/font1.png";
 
 const int FONTBANK_SIZE = 16,
 FRAMES_PER_SECOND = 4;
@@ -83,6 +96,10 @@ FRAMES_PER_SECOND = 4;
 SDL_Window* g_display_window;
 bool g_game_is_running = true;
 bool g_is_growing = true;
+
+bool failed = false;
+bool succeed = false;
+const int map_speed = 1.0f;
 
 ShaderProgram g_shader_program;
 
@@ -93,16 +110,17 @@ glm::mat4 g_view_matrix,
 
 float g_previous_ticks = 0.0f;
 
-GLuint g_ship_texture_id;
+GLuint g_ship_texture_id,
+g_map_texture_id,
+g_win_texture_id,
+g_wood_texture_id,
 //g_frame_texture_id,
-//g_text_texture_id;
+g_font_texture_id;
 
-// ———— PART 1 ———— //
-glm::vec3 g_ship_movement = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 g_ship_position = glm::vec3(0.0f, 0.0f, 0.0f);
 float g_ship_speed = 1.0f;
 
-bool is_moving = false;
+bool is_moving_h = false;
+bool is_moving_v = false;
 constexpr int SPRITESHEET_DIMENSIONS_COLUMNS = 4;
 constexpr int SPIRTESHEET_DIMENSIONS_ROWS = 2;
 //constexpr int LEFT = 2,
@@ -262,6 +280,8 @@ GLuint load_texture(const char* filepath)
 
 void initialise()
 {
+
+
     // Initialise video and joystick subsystems
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
 
@@ -292,6 +312,9 @@ void initialise()
 
     glUseProgram(g_shader_program.get_program_id());
     g_ship_texture_id = load_texture(SHIP_SPRITE_FILEPATH);
+    g_map_texture_id = load_texture(MAP_SPRITE_FILEPATH);
+    g_wood_texture_id = load_texture(WOOD_SPRITE_FILEPATH);
+    g_font_texture_id = load_texture(FONT_SPRITE_FILEPATH);
     
 
     int g_ship_flying[4][2] =
@@ -305,7 +328,23 @@ void initialise()
     g_state.ship = new Entity(g_ship_texture_id, g_ship_speed, g_ship_flying, g_animation_time, g_animation_frames,
                     g_animation_index, SPRITESHEET_DIMENSIONS_COLUMNS, SPIRTESHEET_DIMENSIONS_ROWS);
 
+    g_state.ship->set_acceleration(glm::vec3(0.0f, ACC_OF_GRAVITY, 0.0f));
+    g_state.ship->set_position(glm::vec3(0.0f, 3.0f, 0.0f));
+    g_state.platforms = new Entity[PLATFORM_COUNT];
+
+    g_state.wood = new Entity(g_wood_texture_id, 0);
+
+    for (int i = 0; i < PLATFORM_COUNT; i++)
+    {
+        g_state.platforms[i].set_texture_id(load_texture(MAP_SPRITE_FILEPATH));
+        g_state.platforms[i].set_position(glm::vec3(i -1.0f, -3.0f, 0.0f));
+        g_state.platforms[i].update(0.0f, nullptr, 0, false, false);
+    }
+
+
+    g_state.map = new Entity(g_map_texture_id, map_speed);
     g_state.ship->face_down();
+    //g_state.map->face_down();
     // ————— FRAME ———— //
     //g_frame_model_matrix = glm::mat4(1.0f);
     //
@@ -355,7 +394,7 @@ void process_input()
     {
         g_state.ship->move_left();
         a_key = true;
-        is_moving = true;
+        is_moving_h = true;
         //g_animation_indices = g_ship_flying[LEFT];
     }
     //else
@@ -366,19 +405,19 @@ void process_input()
     {
         g_state.ship->move_right();
         d_key = true;
-        is_moving = true;
+        is_moving_h = true;
         //g_animation_indices = g_ship_flying[RIGHT];
     }
-    //else
-    //{
-    //    is_moving = false;
-    //}
+    else
+    {
+        is_moving_h = false;
+    }
 
-    else if (key_state[SDL_SCANCODE_UP])
+    if (key_state[SDL_SCANCODE_UP])
     {
         g_state.ship->move_up();
         w_key = true;
-        is_moving = true;
+        is_moving_v = true;
         //g_animation_indices = g_ship_flying[UP];
     }
     //else 
@@ -389,10 +428,10 @@ void process_input()
     {
         g_state.ship->move_down();
         s_key = true;
-        is_moving = true;
+        is_moving_v = true;
         //g_animation_indices = g_ship_flying[DOWN];
     }
-    else { is_moving = false; }
+    else { is_moving_v = false; }
 
 
 
@@ -410,18 +449,46 @@ void update()
     g_previous_ticks = ticks;
 
 
-    g_state.ship->update(delta_time);
+    //FIXED TIMESTEP
+    delta_time += g_time_accumulator;
+    
 
-    /*if (is_moving) 
+    if (delta_time < FIXED_TIMESTEP)
     {
-        g_animation_index = 1;
+        g_time_accumulator = delta_time;
+        return;
     }
-    else { g_animation_index = 0; }
 
-    g_ship_position += g_ship_movement * g_ship_speed * delta_time;
+    while (delta_time >= FIXED_TIMESTEP)
+    {
+        g_state.ship->update(FIXED_TIMESTEP, g_state.platforms, PLATFORM_COUNT, is_moving_h, is_moving_v);
+        g_state.wood->update(FIXED_TIMESTEP);
+        for (int i = 0; i < PLATFORM_COUNT; i++) {
+            g_state.platforms[i].update(FIXED_TIMESTEP);
+            g_state.platforms[i].set_scale(glm::vec3(10.0f, 0.5f, 1.0f));
+        }
+        delta_time -= FIXED_TIMESTEP;
+        
+    }
 
-    g_ship_model_matrix = glm::mat4(1.0f);
-    g_ship_model_matrix = glm::translate(g_ship_model_matrix, g_ship_position);*/
+    if (g_state.ship->check_collision(g_state.wood))
+    {
+        g_state.ship->set_velocity(glm::vec3(0.0f, 0.0f, 0.0f));
+        succeed = true;
+    }
+    for (int i = 0; i < PLATFORM_COUNT; i++)
+    {
+        if (g_state.ship->check_collision(&g_state.platforms[i]))
+        {
+            failed = true;
+        }
+    }
+
+    //g_state.platforms->update(FIXED_TIMESTEP);
+ 
+    g_state.wood->set_position(glm::vec3(-2.0f, -2.7f, 0.0f));
+    g_state.wood->set_scale(glm::vec3(0.5f, 0.5f, 0.5f));
+    g_state.ship->set_scale(glm::vec3(0.5f, 0.5f, 0.5f));
 
    
 }
@@ -430,13 +497,21 @@ void render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     g_state.ship->render(&g_shader_program);
-    
-    /*g_shader_program.set_model_matrix(g_frame_model_matrix);
-    draw_sprite_from_texture_atlas(&g_shader_program, g_frame_texture_id, 0, FRAME_ROWS, FRAME_COLS);
-    
-    draw_text(&g_shader_program, g_text_texture_id, std::string("PRESS S TO"), 0.25f, 0.0f, glm::vec3(-1.25f, 2.0f, 0.0f));
-    draw_text(&g_shader_program, g_text_texture_id, std::string("CHOOSE YOUR CHARACTER"), 0.25f, 0.01f, glm::vec3(-2.5f, 1.5f, 0.0f));*/
+    g_state.wood->render(&g_shader_program);
+    for (int i = 0; i < PLATFORM_COUNT; i++)
+        g_state.platforms[i].render(&g_shader_program);
 
+    if(succeed == true)
+    {
+        draw_text(&g_shader_program, g_font_texture_id, "mission accomplished", 0.4f, 0.005f, glm::vec3(-3.5f, 0.0f, 0.0f));
+    }
+    
+    if (failed == true)
+    {
+        draw_text(&g_shader_program, g_font_texture_id, "mission failed", 0.4f, 0.005f, glm::vec3(-2.5f, 0.0f, 0.0f));
+    }
+    
+    
     SDL_GL_SwapWindow(g_display_window);
 }
 

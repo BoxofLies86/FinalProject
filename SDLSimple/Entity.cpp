@@ -18,10 +18,10 @@
 
 //Default constructor
 Entity::Entity()
-    : m_position(0.0f), m_movement(0.0f), m_scale(1.0f, 1.0f, 0.0f), m_model_matrix(1.0f),
+    : m_position(0.0f), m_movement(0.0f), m_model_matrix(1.0f), m_scale(glm::vec3(1.0f, 1.0f, 1.0f)),
     m_speed(0.0f), m_animation_columns(0), m_animation_frames(0), m_animation_index(0),
     m_animation_rows(0), m_animation_indices(nullptr), m_animation_time(0.0f),
-    m_texture_id(0)
+    m_texture_id(0), m_velocity(0.0f), m_acceleration(0.0f)
 {
     // Initialize m_walking with zeros or any default value
     for (int i = 0; i < SECONDS_PER_FRAME; ++i)
@@ -37,28 +37,29 @@ Entity::Entity(GLuint texture_id, float speed, int m_walking[4][2], float animat
     //m_animation_rows(animation_rows) 
         
     
-    m_position(0.0f), m_movement(0.0f), m_scale(1.0f, 1.0f, 0.0f), m_model_matrix(1.0f),
+    m_position(0.0f), m_movement(0.0f), m_model_matrix(1.0f), m_scale(glm::vec3(1.0f, 1.0f, 1.0f)),
     m_speed(speed), m_animation_columns(animation_cols),
     m_animation_frames(animation_frames), m_animation_index(animation_index),
     m_animation_rows(animation_rows), m_animation_indices(nullptr),
-    m_animation_time(animation_time), m_texture_id(texture_id)
+    m_animation_time(animation_time), m_texture_id(texture_id), m_velocity(0.0f), m_acceleration(0.0f)
 {
     set_walking(m_walking);
 }
 
 // Simpler constructor for partial initialization
 Entity::Entity(GLuint texture_id, float speed)
-    : m_position(0.0f), m_movement(0.0f), m_scale(1.0f, 1.0f, 0.0f), m_model_matrix(1.0f),
+    : m_position(0.0f), m_movement(0.0f), m_model_matrix(1.0f),
     m_speed(speed), m_animation_columns(0), m_animation_frames(0), m_animation_index(0),
     m_animation_rows(0), m_animation_indices(nullptr), m_animation_time(0.0f),
-    m_texture_id(texture_id)
+    m_texture_id(texture_id), m_velocity(0.0f), m_acceleration(0.0f), m_scale(glm::vec3(1.0f, 1.0f, 1.0f))
 {
     // Initialize m_walking with zeros or any default value
     for (int i = 0; i < SECONDS_PER_FRAME; ++i)
         for (int j = 0; j < SECONDS_PER_FRAME; ++j) m_walking[i][j] = 0;
 }
 
-//destructor
+
+//destructorqq
 Entity::~Entity() { }
 
 void Entity::draw_sprite_from_texture_atlas(ShaderProgram* program, GLuint texture_id, int index)
@@ -99,6 +100,92 @@ void Entity::draw_sprite_from_texture_atlas(ShaderProgram* program, GLuint textu
     glDisableVertexAttribArray(program->get_tex_coordinate_attribute());
 }
 
+bool const Entity::check_collision(Entity* other) const
+{
+    float collision_factor = 0.28f;
+    float x_distance = fabs(m_position.x - other->m_position.x) - ((m_width * collision_factor + other->m_width * collision_factor) / 2.0f);
+    float y_distance = fabs(m_position.y - other->m_position.y) - ((m_height * collision_factor + other->m_height * collision_factor) / 2.0f);
+
+    return x_distance < 0.0f && y_distance < 0.0f;
+}
+
+void Entity::update(float delta_time, Entity* collidable_entities, int collidable_entity_count, bool is_moving_h, bool is_moving_v)
+{
+    //check collision
+    for (int i = 0; i < collidable_entity_count; i++)
+    {
+        if (check_collision(&collidable_entities[i]))
+        {
+            return;
+        }
+    }
+    
+
+
+
+    //rocket animation
+    if (m_animation_indices != NULL)
+    {
+        if (is_moving_h == true || is_moving_v == true)
+        {
+            m_animation_index = 1;
+
+        }
+        else
+        {
+           m_animation_index = 0;
+        }
+    }
+
+
+    if (is_moving_h == false)
+    {
+        //m_velocity.x += m_acceleration.x * delta_time * 0.01f;
+        //m_position.x += m_velocity.x * delta_time;
+        if(m_acceleration.x < 0)
+        {
+            m_acceleration.x += 1.0f;
+            m_velocity.x += m_acceleration.x * delta_time * 0.01f;
+            m_position.x += m_velocity.x * delta_time;
+        }
+        if(m_acceleration.x > 0)
+        {
+            m_acceleration.x -= 1.0f;
+            m_velocity.x += m_acceleration.x * delta_time * 0.01f;
+            m_position.x += m_velocity.x * delta_time;
+        }
+    }
+ 
+    m_velocity.x += m_acceleration.x * delta_time * 0.01f;
+    m_position.x += m_velocity.x * delta_time;
+
+
+    if (is_moving_v == false)
+    {
+        //m_velocity.x += m_acceleration.x * delta_time * 0.01f;
+        //m_position.x += m_velocity.x * delta_time;
+        if (m_acceleration.y < -1)
+        {
+            m_acceleration.y += 1.0f;
+            m_velocity.y += m_acceleration.y * delta_time * 0.01f;
+            m_position.y += m_velocity.y * delta_time;
+        }
+        if (m_acceleration.y > -1)
+        {
+            m_acceleration.y -= 1.0f;
+            m_velocity.y += m_acceleration.y * delta_time * 0.01f;
+            m_position.y += m_velocity.y * delta_time;
+        }
+    }
+
+    m_velocity.y += m_acceleration.y * delta_time * 0.01f;
+    m_position.y += m_velocity.y * delta_time;
+
+    m_model_matrix = glm::mat4(1.0f);
+    m_model_matrix = glm::translate(m_model_matrix, m_position);
+    m_model_matrix = glm::scale(m_model_matrix, m_scale);
+}
+
 void Entity::update(float delta_time)
 {
     if (m_animation_indices != NULL)
@@ -121,7 +208,9 @@ void Entity::update(float delta_time)
         }
     }
 
-    m_position += m_movement * m_speed * delta_time;
+    m_velocity.x += m_acceleration.x * delta_time * 0.01f;
+    m_position.x += m_velocity.x * delta_time;
+    //m_position += m_movement * m_speed * delta_time;
     m_model_matrix = glm::mat4(1.0f);
     m_model_matrix = glm::translate(m_model_matrix, m_position);
     m_model_matrix = glm::scale(m_model_matrix, m_scale);
