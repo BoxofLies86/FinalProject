@@ -1,2 +1,4 @@
-﻿  Effects.cpp
+﻿  main.cpp
+C:\Users\josep\source\repos\SDLSimple\SDLSimple\main.cpp(137,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\josep\source\repos\SDLSimple\SDLSimple\main.cpp(307,36): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   SDLSimple.vcxproj -> C:\Users\josep\source\repos\SDLSimple\Debug\SDLSimple.exe

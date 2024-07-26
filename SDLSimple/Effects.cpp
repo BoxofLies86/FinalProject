@@ -84,8 +84,8 @@ void Effects::update(float delta_time)
             m_view_offset = glm::vec3(shake_value, shake_value, 0.0f);
             shake_value = sin(40 * m_time_left) * delta_time;
             m_time_left -= 0.5f;
-            std::cout << "m_time_left: " << m_time_left <<" ";
-            std::cout << "Shake value: " << shake_value<< "\n";
+            //std::cout << "m_time_left: " << m_time_left <<" ";
+            //std::cout << "Shake value: " << shake_value<< "\n";
         }
         
         

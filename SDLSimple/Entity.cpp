@@ -25,6 +25,10 @@ void Entity::ai_activate(Entity* player)
         ai_guard(player);
         break;
 
+    case SHOOTER:
+        ai_jump();
+        break;
+
     default:
         break;
     }
@@ -32,31 +36,78 @@ void Entity::ai_activate(Entity* player)
 
 void Entity::ai_walk()
 {
-    m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+    switch (m_ai_state)
+    {
+    
+    case IDLE:
+        m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+        if (m_position.x < 3.0f)
+        {
+            m_ai_state = WALKING;
+        }
+        break;
+    case WALKING:
+        m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
+        if (m_position.x == 6.0f)
+        {
+            m_ai_state = IDLE;
+        }
+        break;
+    default:
+        break;
+    }
+    
 }
 
 void Entity::ai_guard(Entity* player)
 {
     switch (m_ai_state) {
     case IDLE:
-        if (glm::distance(m_position, player->get_position()) < 3.0f) m_ai_state = WALKING;
+
+        m_movement.x = 0;
+        if (glm::distance(m_position, player->get_position()) < 3.0f)
+        {
+            m_ai_state = WALKING;
+            
+        }
+        if (m_velocity.y == 0)
+        {
+            set_acceleration(glm::vec3(0.0f, 3.0f, 0.0f));
+        }
+        else if (m_velocity.y > 1)
+        {
+            set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
+        }
+        
+        
         break;
 
     case WALKING:
+        if (m_velocity.y > 2)
+        {
+            set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
+        }
         if (m_position.x > player->get_position().x) {
             m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
         }
         else {
             m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
         }
-        break;
 
-    case ATTACKING:
+        if (fabs(m_position.x - player->get_position().x) > 3.0f)
+        {
+            m_ai_state = IDLE;
+        }
         break;
 
     default:
         break;
     }
+}
+
+void Entity::ai_jump()
+{
+    m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
 }
 // Default constructor
 Entity::Entity()
@@ -148,6 +199,7 @@ void Entity::draw_sprite_from_texture_atlas(ShaderProgram* program, GLuint textu
 
 bool const Entity::check_collision(Entity* other) const
 {
+    //if (!m_is_active) return false;
     float collision_factor = 1.0f;
     float x_distance = fabs(m_position.x - other->m_position.x) - ((m_width * collision_factor + other->m_width * collision_factor) / 2.0f);
     float y_distance = fabs(m_position.y - other->m_position.y) - ((m_height * collision_factor + other->m_height * collision_factor) / 2.0f);
@@ -157,6 +209,7 @@ bool const Entity::check_collision(Entity* other) const
 
 void const Entity::check_collision_y(Entity* collidable_entities, int collidable_entity_count)
 {
+    //if (!m_is_active) return;
     for (int i = 0; i < collidable_entity_count; i++)
     {
         Entity* collidable_entity = &collidable_entities[i];
@@ -180,10 +233,11 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
                 m_velocity.y = 0;
 
                 // Collision!
-                /*if (collidable_entity->get_entity_type() == TRAP && m_entity_type == PLAYER)
+                if (collidable_entity->get_entity_type() == ENEMY && m_entity_type == PLAYER)
                 {
                     collidable_entity->deactivate();
-                }*/
+                    collidable_entity->make_defeated();
+                }
                 
                 m_collided_bottom = true;
             }
@@ -193,10 +247,11 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
 
 void const Entity::check_collision_x(Entity* collidable_entities, int collidable_entity_count)
 {
+    //if (!m_is_active) return;
     for (int i = 0; i < collidable_entity_count; i++)
     {
         Entity* collidable_entity = &collidable_entities[i];
-
+        //if (collidable_entity->get_is_active() == false) continue;
         if (check_collision(collidable_entity))
         {
             float x_distance = fabs(m_position.x - collidable_entity->m_position.x);
@@ -205,32 +260,143 @@ void const Entity::check_collision_x(Entity* collidable_entities, int collidable
             {
                 m_position.x -= x_overlap;
                 m_velocity.x = 0;
-
+                //std::cout << "this part was run through" << std::endl;
                 // Collision!
                 m_collided_right = true;
+                if (m_entity_type == ENEMY)
+                {
+                    collidable_entity->make_defeated();
+                }
+                m_is_defeated = true;
 
             }
             else if (m_velocity.x < 0)
             {
+                //std::cout << "this part was run through" << std::endl;
                 m_position.x += x_overlap;
                 m_velocity.x = 0;
 
                 // Collision!
                 m_collided_left = true;
+                if (m_entity_type == ENEMY)
+                {
+                    collidable_entity->make_defeated();
+                }
+                m_is_defeated = true;
+                
             }
         }
     }
 }
-void Entity::update(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count)
+
+
+
+
+
+
+
+
+
+
+
+void const Entity::check_collision_y(Map* map)
+{
+    if (!m_is_active) return;
+    // Probes for tiles above
+    glm::vec3 top = glm::vec3(m_position.x, m_position.y + (m_height / 2), m_position.z);
+    glm::vec3 top_left = glm::vec3(m_position.x - (m_width / 2), m_position.y + (m_height / 2), m_position.z);
+    glm::vec3 top_right = glm::vec3(m_position.x + (m_width / 2), m_position.y + (m_height / 2), m_position.z);
+
+    // Probes for tiles below
+    glm::vec3 bottom = glm::vec3(m_position.x, m_position.y - (m_height / 2), m_position.z);
+    glm::vec3 bottom_left = glm::vec3(m_position.x - (m_width / 2), m_position.y - (m_height / 2), m_position.z);
+    glm::vec3 bottom_right = glm::vec3(m_position.x + (m_width / 2), m_position.y - (m_height / 2), m_position.z);
+
+    float penetration_x = 0;
+    float penetration_y = 0;
+
+    // If the map is solid, check the top three points
+    if (map->is_solid(top, &penetration_x, &penetration_y) && m_velocity.y > 0)
+    {
+        m_position.y -= penetration_y;
+        m_velocity.y = 0;
+        m_collided_top = true;
+    }
+    else if (map->is_solid(top_left, &penetration_x, &penetration_y) && m_velocity.y > 0)
+    {
+        m_position.y -= penetration_y;
+        m_velocity.y = 0;
+        m_collided_top = true;
+    }
+    else if (map->is_solid(top_right, &penetration_x, &penetration_y) && m_velocity.y > 0)
+    {
+        m_position.y -= penetration_y;
+        m_velocity.y = 0;
+        m_collided_top = true;
+    }
+
+
+    //if (collidable_entity->get_entity_type() == ENEMY && m_entity_type == PLAYER)
+    //{
+    //    collidable_entity->deactivate();
+    //}
+
+    // And the bottom three points
+    if (map->is_solid(bottom, &penetration_x, &penetration_y) && m_velocity.y < 0)
+    {
+        m_position.y += penetration_y;
+        m_velocity.y = 0;
+        m_collided_bottom = true;
+    }
+    else if (map->is_solid(bottom_left, &penetration_x, &penetration_y) && m_velocity.y < 0)
+    {
+        m_position.y += penetration_y;
+        m_velocity.y = 0;
+        m_collided_bottom = true;
+    }
+    else if (map->is_solid(bottom_right, &penetration_x, &penetration_y) && m_velocity.y < 0)
+    {
+        m_position.y += penetration_y;
+        m_velocity.y = 0;
+        m_collided_bottom = true;
+
+    }
+}
+
+void const Entity::check_collision_x(Map* map)
+{
+    if (!m_is_active) return;
+    // Probes for tiles; the x-checking is much simpler
+    glm::vec3 left = glm::vec3(m_position.x - (m_width / 2), m_position.y, m_position.z);
+    glm::vec3 right = glm::vec3(m_position.x + (m_width / 2), m_position.y, m_position.z);
+
+    float penetration_x = 0;
+    float penetration_y = 0;
+
+    if (map->is_solid(left, &penetration_x, &penetration_y) && m_velocity.x < 0)
+    {
+        m_position.x += penetration_x;
+        m_velocity.x = 0;
+        m_collided_left = true;
+    }
+    if (map->is_solid(right, &penetration_x, &penetration_y) && m_velocity.x > 0)
+    {
+        m_position.x -= penetration_x;
+        m_velocity.x = 0;
+        m_collided_right = true;
+    }
+}
+
+
+void Entity::update(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count, Map *map)
 {
     
-
     m_collided_top = false;
     m_collided_bottom = false;
     m_collided_left = false;
     m_collided_right = false;
-
-    if (!m_is_active) return;
+    //std::cout << "m_velocity.x: " << m_velocity.x << '\n';
+    //if (!m_is_active) return;
     if (m_entity_type == ENEMY) ai_activate(player);
 
     if (m_animation_indices != NULL)
@@ -258,9 +424,11 @@ void Entity::update(float delta_time, Entity* player, Entity* collidable_entitie
 
     m_position.y += m_velocity.y * delta_time;
     check_collision_y(collidable_entities, collidable_entity_count);
+    check_collision_y(map);
 
     m_position.x += m_velocity.x * delta_time;
     check_collision_x(collidable_entities, collidable_entity_count);
+    check_collision_x(map);
 
     if (m_is_jumping)
     {
