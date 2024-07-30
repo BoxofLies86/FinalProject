@@ -1,3 +1,12 @@
+/**
+* Author: Joseph Lin
+* Assignment: Rise of the AI
+* Date due: 2024-07-27, 11:59pm
+* I pledge that I have completed this assignment without
+* collaborating with anyone else, in conformance with the
+* NYU School of Engineering Policies and Procedures on
+* Academic Misconduct.
+**/
 #define GL_SILENCE_DEPRECATION
 #define STB_IMAGE_IMPLEMENTATION
 #define LOG(argument) std::cout << argument << '\n'
@@ -284,7 +293,7 @@ void initialise()
             g_state.enemy[i].set_ai_type(SHOOTER);
             g_state.enemy[i].set_ai_state(IDLE);
             //g_state.enemy[i].set_velocity(glm::vec3(-1.0f, 0.0f, 0.0f));
-            g_state.enemy[i].set_position(glm::vec3(4.0f, -5.0f, 0.0f));
+            g_state.enemy[i].set_position(glm::vec3(3.0f, -5.0f, 0.0f));
             g_state.enemy[i].set_acceleration(glm::vec3(0.0f, -9.81f, 0.0f));
         }
 
@@ -330,7 +339,7 @@ void initialise()
 
 
     // Jumping
-    g_state.player->set_jumping_power(5.8f);
+    g_state.player->set_jumping_power(5.5f);
 
     // ––––– GENERAL ––––– //
     glEnable(GL_BLEND);

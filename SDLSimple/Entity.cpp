@@ -1,3 +1,12 @@
+/**
+* Author: Joseph Lin
+* Assignment: Rise of the AI
+* Date due: 2024-07-27, 11:59pm
+* I pledge that I have completed this assignment without
+* collaborating with anyone else, in conformance with the
+* NYU School of Engineering Policies and Procedures on
+* Academic Misconduct.
+**/
 #define GL_SILENCE_DEPRECATION
 #define STB_IMAGE_IMPLEMENTATION
 
@@ -70,14 +79,7 @@ void Entity::ai_guard(Entity* player)
             m_ai_state = WALKING;
             
         }
-        if (m_velocity.y == 0)
-        {
-            set_acceleration(glm::vec3(0.0f, 3.0f, 0.0f));
-        }
-        else if (m_velocity.y > 1)
-        {
-            set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
-        }
+        
         
         
         break;
@@ -107,7 +109,18 @@ void Entity::ai_guard(Entity* player)
 
 void Entity::ai_jump()
 {
-    m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+    if (m_velocity.y == 0 && m_is_active)
+    {
+        set_acceleration(glm::vec3(0.0f, 3.0f, 0.0f));
+    }
+    else if (m_velocity.y > 1 && m_is_active)
+    {
+        set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
+    }
+    else if (!m_is_active)
+    {
+        set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
+    }
 }
 // Default constructor
 Entity::Entity()
