@@ -34,7 +34,7 @@ void Map::build()
 
             // And work out their dimensions and posititions
             float tile_width = 1.0f / (float)m_tile_count_x;
-            float tile_height = 1.0f / (float)m_tile_count_y;   
+            float tile_height = 1.0f / (float)m_tile_count_y;
 
             float x_offset = -(m_tile_size / 2); // From center of tile
             float y_offset = (m_tile_size / 2); // From center of tile

@@ -1,8 +1,8 @@
-﻿  main.cpp
-  Map.cpp
-C:\Users\josep\source\repos\SDLSimple\SDLSimple\Map.cpp(103,16): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\josep\source\repos\SDLSimple\SDLSimple\Map.cpp(104,16): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-  Utility.cpp
-C:\Users\josep\source\repos\SDLSimple\SDLSimple\Utility.cpp(57,23): warning C4018: '<': signed/unsigned mismatch
+﻿  LevelA.cpp
+C:\Users\josep\source\repos\SDLSimple\SDLSimple\LevelA.cpp(95,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+  LevelB.cpp
+C:\Users\josep\source\repos\SDLSimple\SDLSimple\LevelB.cpp(86,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+  Scene.cpp
+  main.cpp
   Generating Code...
   SDLSimple.vcxproj -> C:\Users\josep\source\repos\SDLSimple\Debug\SDLSimple.exe

@@ -25,6 +25,7 @@ struct GameState
     Map* map;
     Entity* player;
     Entity* enemies;
+    Entity* shell;
 
     Mix_Music* bgm;
     Mix_Chunk* jump_sfx;
@@ -34,7 +35,7 @@ struct GameState
 
 class Scene {
 public:
-    int m_number_of_enemies = 1;
+    int m_number_of_enemies = 2;
 
     GameState m_game_state;
 

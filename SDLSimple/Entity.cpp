@@ -46,7 +46,7 @@ void Entity::ai_walk()
 {
     switch (m_ai_state)
     {
-    
+
     case IDLE:
         m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
         if (m_position.x < 3.0f)
@@ -64,7 +64,7 @@ void Entity::ai_walk()
     default:
         break;
     }
-    
+
 }
 
 void Entity::ai_guard(Entity* player)
@@ -76,11 +76,11 @@ void Entity::ai_guard(Entity* player)
         if (glm::distance(m_position, player->get_position()) < 3.0f)
         {
             m_ai_state = WALKING;
-            
+
         }
-        
-        
-        
+
+
+
         break;
 
     case WALKING:
@@ -225,7 +225,7 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
     for (int i = 0; i < collidable_entity_count; i++)
     {
         Entity* collidable_entity = &collidable_entities[i];
-        
+
 
         if (check_collision(collidable_entity))
         {
@@ -250,7 +250,7 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
                     collidable_entity->deactivate();
                     collidable_entity->make_defeated();
                 }
-                
+
                 m_collided_bottom = true;
             }
         }
@@ -295,7 +295,7 @@ void const Entity::check_collision_x(Entity* collidable_entities, int collidable
                     collidable_entity->make_defeated();
                 }
                 m_is_defeated = true;
-                
+
             }
         }
     }
@@ -400,9 +400,9 @@ void const Entity::check_collision_x(Map* map)
 }
 
 
-void Entity::update(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count, Map *map)
+void Entity::update(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count, Map* map)
 {
-    
+
     m_collided_top = false;
     m_collided_bottom = false;
     m_collided_left = false;
