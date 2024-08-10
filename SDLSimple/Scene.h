@@ -25,7 +25,7 @@ struct GameState
     Map* map;
     Entity* player;
     Entity* enemies;
-    Entity* shell;
+    Entity* bullet;
 
     Mix_Music* bgm;
     Mix_Chunk* jump_sfx;

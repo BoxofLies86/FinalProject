@@ -1,8 +1,2 @@
-﻿  LevelA.cpp
-C:\Users\josep\source\repos\SDLSimple\SDLSimple\LevelA.cpp(95,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-  LevelB.cpp
-C:\Users\josep\source\repos\SDLSimple\SDLSimple\LevelB.cpp(86,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-  Scene.cpp
-  main.cpp
-  Generating Code...
+﻿  Entity.cpp
   SDLSimple.vcxproj -> C:\Users\josep\source\repos\SDLSimple\Debug\SDLSimple.exe

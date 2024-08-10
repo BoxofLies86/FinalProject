@@ -4,9 +4,9 @@
 #include "Map.h"
 #include "glm/glm.hpp"
 #include "ShaderProgram.h"
-enum EntityType { PLATFORM, PLAYER, ENEMY };
+enum EntityType { PLATFORM, PLAYER, ENEMY, BULLET };
 enum AIType { WALKER, GUARD, SHOOTER };
-enum AIState { WALKING, IDLE, ATTACKING };
+enum AIState { WALKING_H, WALKING_V, IDLE, ATTACKING };
 
 
 enum AnimationDirection { LEFT, RIGHT, UP, DOWN };
@@ -56,6 +56,9 @@ private:
     bool m_collided_left = false;
     bool m_collided_right = false;
 
+    //bullet
+    bool bullet_collided_map = false;
+
 public:
     // ————— STATIC VARIABLES ————— //
     static constexpr int SECONDS_PER_FRAME = 4;
@@ -80,6 +83,10 @@ public:
     void const check_collision_x(Map* map);
     void render(ShaderProgram* program);
 
+    //BULLET stuff
+    void bullet_activate(Entity* player);
+
+
 
     //AI STUFF
     void ai_activate(Entity* player);
@@ -93,6 +100,7 @@ public:
     void face_right() { m_animation_indices = m_walking[RIGHT]; }
     void face_up() { m_animation_indices = m_walking[UP]; }
     void face_down() { m_animation_indices = m_walking[DOWN]; }
+
 
     void move_left() { m_movement.x = -1.0f; }
     void move_right() { m_movement.x = 1.0f; }

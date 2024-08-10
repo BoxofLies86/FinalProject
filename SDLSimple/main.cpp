@@ -22,6 +22,7 @@
 #include "Map.h"
 #include "Utility.h"
 #include "Scene.h"
+#include "MenuScreen.h"
 #include "LevelA.h"
 #include "LevelB.h"
 
@@ -48,12 +49,21 @@ enum AppStatus { RUNNING, TERMINATED };
 
 // ————— GLOBAL VARIABLES ————— //
 
+bool enter_pressed = false;
+bool right_pressed = false;
+bool left_pressed = false;
+bool succeed = false;
+bool failed = false;
+
+
 //SCENES DUDE
 Scene* g_current_scene;
 LevelA* g_level_a;
 LevelB* g_level_b;
+MenuScreen* g_menu_screen;
 
-Scene* g_levels[2];
+
+Scene* g_levels[3];
 
 SDL_Window* g_display_window;
 
@@ -114,12 +124,14 @@ void initialise()
 
 
     // ————— LEVEL A SETUP ————— //
+    g_menu_screen = new MenuScreen();
     g_level_a = new LevelA();
     g_level_b = new LevelB();
     
 
-    g_levels[0] = g_level_a;
-    g_levels[1] = g_level_b;
+    g_levels[0] = g_menu_screen;
+    g_levels[1] = g_level_a;
+    g_levels[2] = g_level_b;
 
     switch_to_scene(g_levels[0]);
 
@@ -151,13 +163,26 @@ void process_input()
                 break;
 
             case SDLK_SPACE:
+                if (left_pressed == true && fabs(g_current_scene->get_state().bullet->get_position().x - g_current_scene->get_state().player->get_position().x) < 1.0f)
+                {
+                    g_current_scene->get_state().bullet->move_left();
+                }
+                else if (right_pressed == true && fabs(g_current_scene->get_state().bullet->get_position().x - g_current_scene->get_state().player->get_position().x) < 1.0f)
+                {
+                    g_current_scene->get_state().bullet->move_right();
+                }
+
+
                 // ————— JUMPING ————— //
-                if (g_current_scene->get_state().player->get_collided_bottom())
+                /*if (g_current_scene->get_state().player->get_collided_bottom())
                 {
                     g_current_scene->get_state().player->jump();
                     Mix_PlayChannel(-1, g_current_scene->get_state().jump_sfx, 0);
-                }
+                }*/
                 break;
+
+            case SDLK_RETURN:
+                enter_pressed = true;
 
             default:
                 break;
@@ -171,8 +196,18 @@ void process_input()
     // ————— KEY HOLD ————— //
     const Uint8* key_state = SDL_GetKeyboardState(NULL);
 
-    if (key_state[SDL_SCANCODE_LEFT])        g_current_scene->get_state().player->move_left();
-    else if (key_state[SDL_SCANCODE_RIGHT])  g_current_scene->get_state().player->move_right();
+    if (key_state[SDL_SCANCODE_LEFT])
+    {
+        g_current_scene->get_state().player->move_left();
+        right_pressed = false;
+        left_pressed = true;
+    }        
+    else if (key_state[SDL_SCANCODE_RIGHT])
+    {
+        g_current_scene->get_state().player->move_right();
+        left_pressed = false;
+        right_pressed = true;
+    }
     else if (key_state[SDL_SCANCODE_UP])  g_current_scene->get_state().player->move_up();
     else if (key_state[SDL_SCANCODE_DOWN])  g_current_scene->get_state().player->move_down();
 
@@ -205,10 +240,23 @@ void update()
 
     g_accumulator = delta_time;
 
+    //succeed or fail
+    if (g_current_scene->get_state().player->get_is_defeated() == true)
+    {
+        failed = true;
+        std::cout << "FAILED" << std::endl;
+    }
+
+
     //SWITCH SCENE
-    if (g_current_scene == g_level_a && g_current_scene->get_state().player->get_position().x > 35.0f)
+    if (g_current_scene == g_menu_screen && enter_pressed)
     {
         switch_to_scene(g_levels[1]);
+    }
+
+    if (g_current_scene == g_level_a && g_current_scene->get_state().player->get_position().x > 35.0f)
+    {
+        switch_to_scene(g_levels[2]);
     }
 
 
@@ -242,6 +290,8 @@ void render()
     // ————— RENDERING THE SCENE (i.e. map, character, enemies...) ————— //
     g_current_scene->render(&g_shader_program);
 
+    
+
     SDL_GL_SwapWindow(g_display_window);
 }
 
@@ -250,7 +300,9 @@ void shutdown()
     SDL_Quit();
 
     // ————— DELETING LEVEL A DATA (i.e. map, character, enemies...) ————— //
+    delete g_menu_screen;
     delete g_level_a;
+    delete g_level_b;
 }
 
 // ————— GAME LOOP ————— //

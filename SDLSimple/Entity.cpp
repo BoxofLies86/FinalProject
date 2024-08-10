@@ -21,51 +21,67 @@
 #include "ShaderProgram.h"
 #include "Entity.h"
 
+
+//void Entity::bullet_activate(Entity* player)
+//{
+//    if (m_movement.x == 0)
+//    {
+//        m_position = player->get_position();
+//    }
+//    if (bullet_collided_map == true)
+//    {
+//        bullet_collided_map == false;
+//        m_position = player->get_position();
+//        m_movement.x = 0;
+//    }
+//    std::cout << m_movement.x << std::endl;
+//}
+
 void Entity::ai_activate(Entity* player)
 {
     switch (m_ai_type)
     {
-    case WALKER:
+    /*case WALKER:
         ai_walk();
-        break;
+        break;*/
 
     case GUARD:
         ai_guard(player);
         break;
 
-    case SHOOTER:
-        ai_jump();
-        break;
+    //case SHOOTER:
+    //    ai_jump();
+    //    break;
 
     default:
         break;
     }
 }
 
-void Entity::ai_walk()
-{
-    switch (m_ai_state)
-    {
-
-    case IDLE:
-        m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
-        if (m_position.x < 3.0f)
-        {
-            m_ai_state = WALKING;
-        }
-        break;
-    case WALKING:
-        m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
-        if (m_position.x == 6.0f)
-        {
-            m_ai_state = IDLE;
-        }
-        break;
-    default:
-        break;
-    }
-
-}
+//void Entity::ai_walk()
+//{
+//    switch (m_ai_state)
+//    {
+//
+//    case IDLE:
+//        m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+//        if (m_position.x < 3.0f)
+//        {
+//            m_ai_state = WALKING;
+//        }
+//        break;
+//    case WALKING:
+//        m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
+//        if (m_position.x == 6.0f)
+//        {
+//            m_ai_state = IDLE;
+//        }
+//        break;
+//    default:
+//        break;
+//    }
+//
+//}
 
 void Entity::ai_guard(Entity* player)
 {
@@ -73,31 +89,49 @@ void Entity::ai_guard(Entity* player)
     case IDLE:
 
         m_movement.x = 0;
-        if (glm::distance(m_position, player->get_position()) < 3.0f)
+        if (fabs(m_position.y - player->get_position().y) < 5.0f)
+        {
+            m_ai_state = WALKING_V;
+        }
+        /*if (glm::distance(m_position, player->get_position()) < 3.0f)
         {
             m_ai_state = WALKING;
 
-        }
+        }*/
 
 
 
         break;
 
-    case WALKING:
-        if (m_velocity.y > 2)
-        {
-            set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
-        }
+    case WALKING_H:
         if (m_position.x > player->get_position().x) {
-            m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+            m_movement = glm::vec3(-4.5f, 0.0f, 0.0f);
         }
-        else {
-            m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
+        else if(m_position.x < player->get_position().x)
+        {
+            m_movement = glm::vec3(4.5f, 0.0f, 0.0f);
         }
 
-        if (fabs(m_position.x - player->get_position().x) > 3.0f)
+        if (fabs(m_position.x - player->get_position().x) < 1.0f)
         {
-            m_ai_state = IDLE;
+            m_ai_state = WALKING_V;
+        }
+        break;
+
+
+    case WALKING_V:
+        
+        
+        if (m_position.y > player->get_position().y) {
+            m_movement = glm::vec3(0.0f, -1.0f, 0.0f);
+        }
+        else {
+            m_movement = glm::vec3(0.0f, 1.0f, 0.0f);
+        }
+
+        if (fabs(m_position.x - player->get_position().x) > 4.0f)
+        {
+            m_ai_state = WALKING_H;
         }
         break;
 
@@ -106,21 +140,21 @@ void Entity::ai_guard(Entity* player)
     }
 }
 
-void Entity::ai_jump()
-{
-    if (m_velocity.y == 0 && m_is_active)
-    {
-        set_acceleration(glm::vec3(0.0f, 3.0f, 0.0f));
-    }
-    else if (m_velocity.y > 1 && m_is_active)
-    {
-        set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
-    }
-    else if (!m_is_active)
-    {
-        set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
-    }
-}
+//void Entity::ai_jump()
+//{
+//    if (m_velocity.y == 0 && m_is_active)
+//    {
+//        set_acceleration(glm::vec3(0.0f, 3.0f, 0.0f));
+//    }
+//    else if (m_velocity.y > 1 && m_is_active)
+//    {
+//        set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
+//    }
+//    else if (!m_is_active)
+//    {
+//        set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
+//    }
+//}
 // Default constructor
 Entity::Entity()
     : m_position(0.0f), m_movement(0.0f), m_scale(1.0f, 1.0f, 0.0f), m_model_matrix(1.0f),
@@ -221,7 +255,7 @@ bool const Entity::check_collision(Entity* other) const
 
 void const Entity::check_collision_y(Entity* collidable_entities, int collidable_entity_count)
 {
-    //if (!m_is_active) return;
+    if (!m_is_active) return;
     for (int i = 0; i < collidable_entity_count; i++)
     {
         Entity* collidable_entity = &collidable_entities[i];
@@ -237,6 +271,10 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
                 m_velocity.y = 0;
 
                 // Collision!
+                if (collidable_entity->get_entity_type() == ENEMY && m_entity_type == PLAYER)
+                {
+                    make_defeated();
+                }
                 m_collided_top = true;
             }
             else if (m_velocity.y < 0)
@@ -247,8 +285,7 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
                 // Collision!
                 if (collidable_entity->get_entity_type() == ENEMY && m_entity_type == PLAYER)
                 {
-                    collidable_entity->deactivate();
-                    collidable_entity->make_defeated();
+                    make_defeated();
                 }
 
                 m_collided_bottom = true;
@@ -259,7 +296,7 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
 
 void const Entity::check_collision_x(Entity* collidable_entities, int collidable_entity_count)
 {
-    //if (!m_is_active) return;
+    if (!m_is_active) return;
     for (int i = 0; i < collidable_entity_count; i++)
     {
         Entity* collidable_entity = &collidable_entities[i];
@@ -281,6 +318,12 @@ void const Entity::check_collision_x(Entity* collidable_entities, int collidable
                 }
                 m_is_defeated = true;
 
+                if (m_entity_type == BULLET)
+                {
+                    collidable_entity->deactivate();
+                    m_movement.x = 0;
+                }
+
             }
             else if (m_velocity.x < 0)
             {
@@ -295,6 +338,12 @@ void const Entity::check_collision_x(Entity* collidable_entities, int collidable
                     collidable_entity->make_defeated();
                 }
                 m_is_defeated = true;
+
+                if (m_entity_type == BULLET)
+                {
+                    collidable_entity->deactivate();
+                    m_movement.x = 0;
+                }
 
             }
         }
@@ -333,18 +382,30 @@ void const Entity::check_collision_y(Map* map)
         m_position.y -= penetration_y;
         m_velocity.y = 0;
         m_collided_top = true;
+        /*if (m_entity_type == BULLET)
+        {
+            bullet_collided_map = true;
+        }*/
     }
     else if (map->is_solid(top_left, &penetration_x, &penetration_y) && m_velocity.y > 0)
     {
         m_position.y -= penetration_y;
         m_velocity.y = 0;
         m_collided_top = true;
+        /*if(m_entity_type == BULLET)
+        {
+            bullet_collided_map = true;
+        }*/
     }
     else if (map->is_solid(top_right, &penetration_x, &penetration_y) && m_velocity.y > 0)
     {
         m_position.y -= penetration_y;
         m_velocity.y = 0;
         m_collided_top = true;
+        /*if (m_entity_type == BULLET)
+        {
+            bullet_collided_map = true;
+        }*/
     }
 
 
@@ -359,18 +420,30 @@ void const Entity::check_collision_y(Map* map)
         m_position.y += penetration_y;
         m_velocity.y = 0;
         m_collided_bottom = true;
+        /*if (m_entity_type == BULLET)
+        {
+            bullet_collided_map = true;
+        }*/
     }
     else if (map->is_solid(bottom_left, &penetration_x, &penetration_y) && m_velocity.y < 0)
     {
         m_position.y += penetration_y;
         m_velocity.y = 0;
         m_collided_bottom = true;
+        /*if (m_entity_type == BULLET)
+        {
+            bullet_collided_map = true;
+        }*/
     }
     else if (map->is_solid(bottom_right, &penetration_x, &penetration_y) && m_velocity.y < 0)
     {
         m_position.y += penetration_y;
         m_velocity.y = 0;
         m_collided_bottom = true;
+        /*if (m_entity_type == BULLET)
+        {
+            bullet_collided_map = true;
+        }*/
 
     }
 }
@@ -390,12 +463,22 @@ void const Entity::check_collision_x(Map* map)
         m_position.x += penetration_x;
         m_velocity.x = 0;
         m_collided_left = true;
+        if (m_entity_type == BULLET)
+        {
+            bullet_collided_map = true;
+            m_movement.x = 0;
+        }
     }
     if (map->is_solid(right, &penetration_x, &penetration_y) && m_velocity.x > 0)
     {
         m_position.x -= penetration_x;
         m_velocity.x = 0;
         m_collided_right = true;
+        if (m_entity_type == BULLET)
+        {
+            bullet_collided_map = true;
+            m_movement.x = 0;
+        }
     }
 }
 
@@ -408,8 +491,28 @@ void Entity::update(float delta_time, Entity* player, Entity* collidable_entitie
     m_collided_left = false;
     m_collided_right = false;
     //std::cout << "m_velocity.x: " << m_velocity.x << '\n';
-    //if (!m_is_active) return;
+    if (!m_is_active)
+    {
+        set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
+        
+    }
     if (m_entity_type == ENEMY) ai_activate(player);
+
+    if (m_entity_type == BULLET)
+    {
+        if (m_movement.x == 0)
+        {
+            m_position = player->get_position();
+        }
+        std::cout << "movement: "<<m_movement.x << std::endl;
+        std::cout << "position: " << m_position.x << std::endl;
+        std::cout << "COLLIDED WITH MAP? " << bullet_collided_map << std::endl;
+        if (player->get_position().x != m_position.x && m_movement.x == 0)
+        {
+            bullet_collided_map = false;
+            m_position = player->get_position();
+        }
+    }
 
     if (m_animation_indices != NULL)
     {
@@ -454,6 +557,7 @@ void Entity::update(float delta_time, Entity* player, Entity* collidable_entitie
 
     m_model_matrix = glm::mat4(1.0f);
     m_model_matrix = glm::translate(m_model_matrix, m_position);
+    m_model_matrix = glm::scale(m_model_matrix, m_scale);
 }
 
 
@@ -461,7 +565,7 @@ void Entity::render(ShaderProgram* program)
 {
     program->set_model_matrix(m_model_matrix);
 
-    if (!m_is_active) return;
+    //if (!m_is_active) return;
 
     if (m_animation_indices != NULL)
     {
