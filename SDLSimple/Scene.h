@@ -28,7 +28,8 @@ struct GameState
     Entity* bullet;
 
     Mix_Music* bgm;
-    Mix_Chunk* jump_sfx;
+    Mix_Chunk* shoot_sfx;
+    Mix_Chunk* walking_sfx;
 
     int next_scene_id;
 };

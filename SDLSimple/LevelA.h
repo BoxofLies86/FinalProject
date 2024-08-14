@@ -3,11 +3,18 @@
 
 class LevelA : public Scene {
 public:
-    int ENEMY_COUNT = 1;
+    int ENEMY_COUNT = 6;
+
+    bool level_win = false;
 
     ~LevelA();
+
+    //getter
+    bool      const get_level_win() const { return level_win; }
 
     void initialise() override;
     void update(float delta_time) override;
     void render(ShaderProgram* program) override;
+
+    
 };

@@ -11,7 +11,7 @@ FONT_SPRITE_FILEPATH[] = "sprites/font1.png";
 
 GLuint g_font_texture_id;
 
-unsigned int LEVEL_DATA0[] =
+unsigned int LEVEL_DATA1[] =
 {
     0, 0,
     0, 0
@@ -22,14 +22,14 @@ MenuScreen::~MenuScreen()
     //delete[] m_game_state.enemies;
     delete    m_game_state.player;
     delete    m_game_state.map;
-    Mix_FreeChunk(m_game_state.jump_sfx);
+    Mix_FreeChunk(m_game_state.shoot_sfx);
     Mix_FreeMusic(m_game_state.bgm);
 }
 
 void MenuScreen::initialise()
 {
     GLuint map_texture_id = Utility::load_texture("sprites/tileset1.png");
-    m_game_state.map = new Map(LEVEL_WIDTH, LEVEL_HEIGHT, LEVEL_DATA0, map_texture_id, 1.0f, 4, 1);
+    m_game_state.map = new Map(LEVEL_WIDTH, LEVEL_HEIGHT, LEVEL_DATA1, map_texture_id, 1.0f, 4, 1);
 
     GLuint player_texture_id = Utility::load_texture(SPRITESHEET_FILEPATH);
 

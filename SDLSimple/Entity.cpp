@@ -89,7 +89,7 @@ void Entity::ai_guard(Entity* player)
     case IDLE:
 
         m_movement.x = 0;
-        if (fabs(m_position.y - player->get_position().y) < 5.0f)
+        if (fabs(m_position.y - player->get_position().y) < 4.0f)
         {
             m_ai_state = WALKING_V;
         }
@@ -105,14 +105,14 @@ void Entity::ai_guard(Entity* player)
 
     case WALKING_H:
         if (m_position.x > player->get_position().x) {
-            m_movement = glm::vec3(-4.5f, 0.0f, 0.0f);
+            m_movement = glm::vec3(-1.5f, 0.0f, 0.0f);
         }
         else if(m_position.x < player->get_position().x)
         {
-            m_movement = glm::vec3(4.5f, 0.0f, 0.0f);
+            m_movement = glm::vec3(1.5f, 0.0f, 0.0f);
         }
 
-        if (fabs(m_position.x - player->get_position().x) < 1.0f)
+        if (fabs(m_position.x - player->get_position().x) < 0.5f)
         {
             m_ai_state = WALKING_V;
         }
@@ -123,13 +123,13 @@ void Entity::ai_guard(Entity* player)
         
         
         if (m_position.y > player->get_position().y) {
-            m_movement = glm::vec3(0.0f, -1.0f, 0.0f);
+            m_movement = glm::vec3(0.0f, -1.5f, 0.0f);
         }
         else {
-            m_movement = glm::vec3(0.0f, 1.0f, 0.0f);
+            m_movement = glm::vec3(0.0f, 1.5f, 0.0f);
         }
 
-        if (fabs(m_position.x - player->get_position().x) > 4.0f)
+        if (fabs(m_position.y - player->get_position().y) < 0.5f)
         {
             m_ai_state = WALKING_H;
         }
@@ -275,6 +275,10 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
                 {
                     make_defeated();
                 }
+                if (m_entity_type == ENEMY && collidable_entity->get_entity_type() == PLAYER)
+                {
+                    collidable_entity->make_defeated();
+                }
                 m_collided_top = true;
             }
             else if (m_velocity.y < 0)
@@ -286,6 +290,10 @@ void const Entity::check_collision_y(Entity* collidable_entities, int collidable
                 if (collidable_entity->get_entity_type() == ENEMY && m_entity_type == PLAYER)
                 {
                     make_defeated();
+                }
+                if (m_entity_type == ENEMY && collidable_entity->get_entity_type() == PLAYER)
+                {
+                    collidable_entity->make_defeated();
                 }
 
                 m_collided_bottom = true;
@@ -493,7 +501,10 @@ void Entity::update(float delta_time, Entity* player, Entity* collidable_entitie
     //std::cout << "m_velocity.x: " << m_velocity.x << '\n';
     if (!m_is_active)
     {
-        set_acceleration(glm::vec3(0.0f, -9.8f, 0.0f));
+        set_position(glm::vec3(0.0f, -50.0f, 0.0f));
+        //std::cout << "this is the bullet deactivate update velocity: " << get_position().y << std::endl;
+        
+        
         
     }
     if (m_entity_type == ENEMY) ai_activate(player);
@@ -504,9 +515,7 @@ void Entity::update(float delta_time, Entity* player, Entity* collidable_entitie
         {
             m_position = player->get_position();
         }
-        std::cout << "movement: "<<m_movement.x << std::endl;
-        std::cout << "position: " << m_position.x << std::endl;
-        std::cout << "COLLIDED WITH MAP? " << bullet_collided_map << std::endl;
+      
         if (player->get_position().x != m_position.x && m_movement.x == 0)
         {
             bullet_collided_map = false;
