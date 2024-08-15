@@ -30,13 +30,14 @@ struct GameState
     Mix_Music* bgm;
     Mix_Chunk* shoot_sfx;
     Mix_Chunk* walking_sfx;
+    Mix_Chunk* death_sfx;
 
     int next_scene_id;
 };
 
 class Scene {
 public:
-    int m_number_of_enemies = 2;
+    //int m_number_of_enemies = 2;
 
     GameState m_game_state;
 
@@ -45,5 +46,5 @@ public:
     virtual void render(ShaderProgram* program) = 0;
 
     GameState const get_state()             const { return m_game_state; }
-    int       const get_number_of_enemies() const { return m_number_of_enemies; }
+    //int       const get_number_of_enemies() const { return m_number_of_enemies; }
 };

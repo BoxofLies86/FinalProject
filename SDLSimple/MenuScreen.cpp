@@ -23,7 +23,7 @@ MenuScreen::~MenuScreen()
     delete    m_game_state.player;
     delete    m_game_state.map;
     Mix_FreeChunk(m_game_state.shoot_sfx);
-    Mix_FreeMusic(m_game_state.bgm);
+    //Mix_FreeMusic(m_game_state.bgm);
 }
 
 void MenuScreen::initialise()
@@ -101,7 +101,9 @@ void MenuScreen::update(float delta_time)
 
 void MenuScreen::render(ShaderProgram* g_shader_program)
 {
-    Utility::draw_text(g_shader_program, g_font_texture_id, "Press Enter to Start", 0.3, 0.03f, glm::vec3(2.0f, -3.0f, 0.0f));
+    Utility::draw_text(g_shader_program, g_font_texture_id, "The Case of The Horizontally", 0.32, 0.00001f, glm::vec3(0.5f, -2.0f, 0.0f));
+    Utility::draw_text(g_shader_program, g_font_texture_id, "Challenged Doomguy", 0.32, 0.03f, glm::vec3(2.0f, -3.0f, 0.0f));
+    Utility::draw_text(g_shader_program, g_font_texture_id, "Press Enter to Start", 0.3, 0.03f, glm::vec3(2.0f, -5.0f, 0.0f));
     //m_game_state.map->render(g_shader_program);
     //m_game_state.player->render(g_shader_program);
     /*for (int i = 0; i < m_number_of_enemies; i++)

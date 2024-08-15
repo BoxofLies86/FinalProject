@@ -45,6 +45,9 @@
     <ClCompile Include="MenuScreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LevelC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderProgram.h">
@@ -74,12 +77,21 @@
     <ClInclude Include="MenuScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LevelC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\vertex_lit.glsl">
       <Filter>Source Files</Filter>
     </None>
     <None Include="shaders\fragment_lit.glsl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\effects_textured.glsl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\fragment_textured.glsl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

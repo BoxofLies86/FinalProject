@@ -112,7 +112,7 @@ void Entity::ai_guard(Entity* player)
             m_movement = glm::vec3(1.5f, 0.0f, 0.0f);
         }
 
-        if (fabs(m_position.x - player->get_position().x) < 0.5f)
+        if (fabs(m_position.x - player->get_position().x) < 0.2f)
         {
             m_ai_state = WALKING_V;
         }
@@ -129,7 +129,7 @@ void Entity::ai_guard(Entity* player)
             m_movement = glm::vec3(0.0f, 1.5f, 0.0f);
         }
 
-        if (fabs(m_position.y - player->get_position().y) < 0.5f)
+        if (fabs(m_position.y - player->get_position().y) < 0.2f)
         {
             m_ai_state = WALKING_H;
         }

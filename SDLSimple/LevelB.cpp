@@ -1,8 +1,8 @@
 #include "LevelB.h"
 #include "Utility.h"
 
-#define LEVEL_WIDTH 30
-#define LEVEL_HEIGHT 15
+#define LEVEL_WIDTH 40
+#define LEVEL_HEIGHT 20
 
 constexpr char SPRITESHEET_FILEPATH[] = "sprites/doom.png",
 PLATFORM_FILEPATH[] = "sprites/tileset1.png",
@@ -14,21 +14,26 @@ FONT_SPRITE_FILEPATH[] = "sprites/font1.png";
 
 unsigned int LEVEL_DATA0[] =
 {
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2,
-    2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2,
-    2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2,
-    2, 0, 0, 2, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 2,
-    2, 0, 0, 2, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 2,
-    2, 0, 0, 2, 0, 0, 0, 2, 2, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2,
-    2, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2,
-    2, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2,
-    2, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2,
-    2, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2,
-    2, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2,
-    2, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 2,
-    2, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2,
+    2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2,
+    2, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2,
+    2, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 1, 1, 1, 1, 1, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2,
+    2, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 1, 1, 1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2,
+    2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2,
+    2, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2,
+    2, 0, 0, 2, 0, 2, 0, 0, 2, 2, 2, 2, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2,
+    2, 0, 0, 2, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2,
+    2, 0, 0, 2, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2,
+    2, 0, 0, 1, 0, 2, 0, 0, 1, 1, 0, 1, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 2, 0, 0, 2, 2, 2, 0, 0, 2, 2,
+    2, 0, 0, 2, 0, 2, 0, 0, 1, 1, 0, 1, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 0, 0, 2, 2,
+    2, 0, 0, 2, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2,
+    2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2, 2, 2, 0, 0, 2, 2,
+    2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 1, 1, 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 0, 0, 0, 2,
+    2, 0, 0, 2, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 2,
+    2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
 };
 
 LevelB::~LevelB()
@@ -39,7 +44,8 @@ LevelB::~LevelB()
     delete m_game_state.bullet;
     Mix_FreeChunk(m_game_state.shoot_sfx);
     Mix_FreeChunk(m_game_state.walking_sfx);
-    Mix_FreeMusic(m_game_state.bgm);
+    Mix_FreeChunk(m_game_state.death_sfx);
+    //Mix_FreeMusic(m_game_state.bgm);
 }
 
 void LevelB::initialise()
@@ -64,24 +70,24 @@ void LevelB::initialise()
 
     m_game_state.player = new Entity(
         player_texture_id,         // texture id
-        5.0f,                      // speed
-        0.7f,                      // width
-        0.7f,                       // height
+        3.5f,                      // speed
+        0.3f,                      // width
+        0.3f,                       // height
         PLAYER
     );
     m_game_state.player->set_position(glm::vec3(2.0f, -3.0f, 0.0f));
-    m_game_state.player->set_scale(glm::vec3(0.8f, 0.8f, 0.0f));
+    m_game_state.player->set_scale(glm::vec3(0.7f, 0.7f, 0.0f));
 
     // Jumping
     //m_game_state.player->set_jumping_power(3.0f);
 
     //BULLET
     GLuint bullet_texture_id = Utility::load_texture(BULLET_FILEPATH);
-    m_game_state.bullet = new Entity(bullet_texture_id, 6.0f, 1.0f, 1.0f, BULLET);
+    m_game_state.bullet = new Entity(bullet_texture_id, 10.0f, 0.4f, 0.125f, BULLET);
 
 
     m_game_state.bullet->set_position(m_game_state.player->get_position());
-    m_game_state.bullet->set_scale(glm::vec3(1.0f, 0.3f, 0.0f));
+    m_game_state.bullet->set_scale(glm::vec3(0.4f, 0.125f, 0.0f));
     /**
      Enemies' stuff */
     GLuint enemy_texture_id = Utility::load_texture(ENEMY_FILEPATH);
@@ -90,17 +96,22 @@ void LevelB::initialise()
 
     for (int i = 0; i < ENEMY_COUNT; i++)
     {
-        m_game_state.enemies[i] = Entity(enemy_texture_id, 1.0f, 1.0f, 1.0f, ENEMY, GUARD, IDLE);
+        m_game_state.enemies[i] = Entity(enemy_texture_id, 1.5f, 0.7f, 0.7f, ENEMY, GUARD, IDLE);
     }
 
 
     m_game_state.enemies[0].set_position(glm::vec3(8.0f, -1.0f, 0.0f));
-    //m_game_state.enemies[0].set_movement(glm::vec3(0.0f));
-    m_game_state.enemies[1].set_position(glm::vec3(14.0f, -11.0f, 0.0f));
-    m_game_state.enemies[2].set_position(glm::vec3(20.0f, -5.0f, 0.0f));
-    m_game_state.enemies[3].set_position(glm::vec3(23.0f, -11.0f, 0.0f));
+    m_game_state.enemies[1].set_position(glm::vec3(1.0f, -17.0f, 0.0f));
+    m_game_state.enemies[2].set_position(glm::vec3(13.0f, -11.0f, 0.0f));
+    m_game_state.enemies[3].set_position(glm::vec3(25.0f, -15.0f, 0.0f));
     m_game_state.enemies[4].set_position(glm::vec3(24.0f, -3.0f, 0.0f));
-    m_game_state.enemies[5].set_position(glm::vec3(29.0f, -2.0f, 0.0f));
+    m_game_state.enemies[5].set_position(glm::vec3(38.0f, -1.0f, 0.0f));
+    m_game_state.enemies[6].set_position(glm::vec3(38.0f, -18.0f, 0.0f));
+
+    for (int i = 0; i < ENEMY_COUNT; i++)
+    {
+        m_game_state.enemies[i].set_scale(glm::vec3(0.8f, 0.8f, 0.0f));
+    }
     //m_game_state.enemies[1].set_position(glm::vec3(3.0f, 0.0f, 0.0f));
     //m_game_state.enemies[1].set_movement(glm::vec3(0.0f));
     //m_game_state.enemies[0].set_acceleration(glm::vec3(0.0f, -9.81f, 0.0f));
@@ -111,12 +122,13 @@ void LevelB::initialise()
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
     Mix_AllocateChannels(16);
 
-    m_game_state.bgm = Mix_LoadMUS("sprites/kehlani.mp3");
+ /*   m_game_state.bgm = Mix_LoadMUS("sprites/kehlani.mp3");
     Mix_PlayMusic(m_game_state.bgm, -1);
-    Mix_VolumeMusic(0.0f);
+    Mix_VolumeMusic(0.0f);*/
 
     m_game_state.shoot_sfx = Mix_LoadWAV("sprites/shooty.wav");
     m_game_state.walking_sfx = Mix_LoadWAV("sprites/footstep1.wav");
+    m_game_state.death_sfx = Mix_LoadWAV("sprites/death.wav");
 }
 
 void LevelB::update(float delta_time)
@@ -130,7 +142,7 @@ void LevelB::update(float delta_time)
 
     if (!m_game_state.enemies[0].get_is_active() && !m_game_state.enemies[1].get_is_active()
         && !m_game_state.enemies[2].get_is_active() && !m_game_state.enemies[3].get_is_active()
-        && !m_game_state.enemies[4].get_is_active() && !m_game_state.enemies[5].get_is_active())
+        && !m_game_state.enemies[4].get_is_active() && !m_game_state.enemies[5].get_is_active() && !m_game_state.enemies[6].get_is_active())
     {
         level_win = true;
     }

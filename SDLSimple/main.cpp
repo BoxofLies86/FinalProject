@@ -19,12 +19,14 @@
 #include <ctime>
 #include <vector>
 #include "Entity.h"
+#include "Effects.h"
 #include "Map.h"
 #include "Utility.h"
 #include "Scene.h"
 #include "MenuScreen.h"
 #include "LevelA.h"
 #include "LevelB.h"
+#include "LevelC.h"
 
 // ————— CONSTANTS ————— //
 constexpr int WINDOW_WIDTH = 640,
@@ -40,16 +42,14 @@ VIEWPORT_Y = 0,
 VIEWPORT_WIDTH = WINDOW_WIDTH,
 VIEWPORT_HEIGHT = WINDOW_HEIGHT;
 
-//constexpr char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
-//F_SHADER_PATH[] = "shaders/fragment_textured.glsl",
-//FONT_SPRITE_FILEPATH[] = "sprites/font1.png";
 
-constexpr char V_SHADER_PATH[] = "shaders/vertex_lit.glsl",
-F_SHADER_PATH[] = "shaders/fragment_lit.glsl",
+constexpr char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
+F_SHADER_PATH[] = "shaders/effects_textured.glsl",
 FONT_SPRITE_FILEPATH[] = "sprites/font1.png";
 
+
 //MUSIC
-constexpr char BGM_FILEPATH[] = "sprites/kehlani.mp3";
+constexpr char BGM_FILEPATH[] = "sprites/myeyes2.mp3";
 
 constexpr int CD_QUAL_FREQ = 44100,
 AUDIO_CHAN_AMT = 2,     // stereo
@@ -57,7 +57,9 @@ AUDIO_BUFF_SIZE = 4096;
 
 Mix_Music* g_music;
 
-Mix_Chunk* g_shoot_sfx;
+//Mix_Chunk* g_shoot_sfx;
+
+Effects* g_effects;
 
 constexpr float MILLISECONDS_IN_SECOND = 1000.0;
 
@@ -71,6 +73,9 @@ bool left_pressed = false;
 bool succeed = false;
 bool failed = false;
 bool next_level = false;
+bool death_played = false;
+
+GLuint is_player_dead_location;
 
 GLuint text_texture_id;
 
@@ -78,10 +83,11 @@ GLuint text_texture_id;
 Scene* g_current_scene;
 LevelA* g_level_a;
 LevelB* g_level_b;
+LevelC* g_level_c;
 MenuScreen* g_menu_screen;
 
 
-Scene* g_levels[3];
+Scene* g_levels[4];
 
 SDL_Window* g_display_window;
 
@@ -109,7 +115,7 @@ void initialise()
 {
     // ————— VIDEO ————— //
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-    g_display_window = SDL_CreateWindow("Hello, Scenes!",
+    g_display_window = SDL_CreateWindow("BRUH BRUH BRUH BRUH BRUH BRUH BRUH BRUH BRUH BRUH BRUH BUH  BUH BUUUUH",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT,
         SDL_WINDOW_OPENGL);
@@ -126,6 +132,8 @@ void initialise()
 #endif
 
 
+    
+
     //BGM
     Mix_OpenAudio(CD_QUAL_FREQ, MIX_DEFAULT_FORMAT, AUDIO_CHAN_AMT, AUDIO_BUFF_SIZE);
     Mix_AllocateChannels(16);
@@ -139,12 +147,13 @@ void initialise()
 
     );
 
-    Mix_VolumeMusic(MIX_MAX_VOLUME / 2.0);
+    Mix_VolumeMusic(MIX_MAX_VOLUME);
 
     // ————— GENERAL ————— //
     glViewport(VIEWPORT_X, VIEWPORT_Y, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
     g_shader_program.load(V_SHADER_PATH, F_SHADER_PATH);
+    
 
     g_view_matrix = glm::mat4(1.0f);
     g_projection_matrix = glm::ortho(-5.0f, 5.0f, -3.75f, 3.75f, -1.0f, 1.0f);
@@ -153,6 +162,8 @@ void initialise()
     g_shader_program.set_view_matrix(g_view_matrix);
 
     glUseProgram(g_shader_program.get_program_id());
+
+    is_player_dead_location = glGetUniformLocation(g_shader_program.get_program_id(), "player_dead");
 
     glClearColor(BG_RED, BG_BLUE, BG_GREEN, BG_OPACITY);
 
@@ -165,14 +176,21 @@ void initialise()
     g_menu_screen = new MenuScreen();
     g_level_a = new LevelA();
     g_level_b = new LevelB();
+    g_level_c = new LevelC();
     
 
     g_levels[0] = g_menu_screen;
     g_levels[1] = g_level_a;
     g_levels[2] = g_level_b;
+    g_levels[3] = g_level_c;
 
+
+    //start menu with effect
+    
     switch_to_scene(g_levels[0]);
-
+    //EFFECTS
+    g_effects = new Effects(g_projection_matrix, g_view_matrix);
+    g_effects->start(FADEIN, 0.2);
     // ————— BLENDING ————— //
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -181,6 +199,7 @@ void initialise()
 void process_input()
 {
     g_current_scene->get_state().player->set_movement(glm::vec3(0.0f));
+    if (g_current_scene->get_state().player->get_is_defeated()) failed = true;
 
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -201,16 +220,22 @@ void process_input()
                 break;
 
             case SDLK_SPACE:
-                if (left_pressed == true && fabs(g_current_scene->get_state().bullet->get_position().x - g_current_scene->get_state().player->get_position().x) < 1.0f)
+                if (!failed && !succeed)
                 {
-                    g_current_scene->get_state().bullet->move_left();
-                    Mix_PlayChannel(2, g_current_scene->get_state().shoot_sfx, 0);
+                    if (left_pressed == true && fabs(g_current_scene->get_state().bullet->get_position().x - g_current_scene->get_state().player->get_position().x) < 1.0f)
+                    {
+                        g_current_scene->get_state().bullet->move_left();
+                        Mix_PlayChannel(2, g_current_scene->get_state().shoot_sfx, 0);
+                        //Mix_VolumeChunk(g_current_scene->get_state().shoot_sfx, MIX_MAX_VOLUME / 2.0f);
+                    }
+                    else if (right_pressed == true && fabs(g_current_scene->get_state().bullet->get_position().x - g_current_scene->get_state().player->get_position().x) < 1.0f)
+                    {
+                        g_current_scene->get_state().bullet->move_right();
+                        Mix_PlayChannel(2, g_current_scene->get_state().shoot_sfx, 0);
+                        //Mix_VolumeChunk(g_current_scene->get_state().shoot_sfx, MIX_MAX_VOLUME / 2.0f);
+                    }
                 }
-                else if (right_pressed == true && fabs(g_current_scene->get_state().bullet->get_position().x - g_current_scene->get_state().player->get_position().x) < 1.0f)
-                {
-                    g_current_scene->get_state().bullet->move_right();
-                    Mix_PlayChannel(2, g_current_scene->get_state().shoot_sfx, 0);
-                }
+                
 
                 // ————— JUMPING ————— //
                 /*if (g_current_scene->get_state().player->get_collided_bottom())
@@ -237,28 +262,48 @@ void process_input()
 
     if (key_state[SDL_SCANCODE_LEFT])
     {
-        g_current_scene->get_state().player->move_left();
-        Mix_PlayChannel(-1, g_current_scene->get_state().walking_sfx, 0);
-        right_pressed = false;
-        left_pressed = true;
+        if (!failed && !succeed)
+        {
+            g_current_scene->get_state().player->move_left();
+            Mix_PlayChannel(-1, g_current_scene->get_state().walking_sfx, 0);
+            Mix_VolumeChunk(g_current_scene->get_state().walking_sfx, MIX_MAX_VOLUME / 2.0f);
+            right_pressed = false;
+            left_pressed = true;
+        }
+        
     }        
     else if (key_state[SDL_SCANCODE_RIGHT])
     {
-        g_current_scene->get_state().player->move_right();
-        Mix_PlayChannel(-1, g_current_scene->get_state().walking_sfx, 0);
-        left_pressed = false;
-        right_pressed = true;
+        if (!failed && !succeed)
+        {
+            g_current_scene->get_state().player->move_right();
+            Mix_PlayChannel(-1, g_current_scene->get_state().walking_sfx, 0);
+            Mix_VolumeChunk(g_current_scene->get_state().walking_sfx, MIX_MAX_VOLUME / 2.0f);
+            left_pressed = false;
+            right_pressed = true;
+        }
+        
     }
     else if (key_state[SDL_SCANCODE_UP])
     {
-        g_current_scene->get_state().player->move_up();
-        Mix_PlayChannel(-1, g_current_scene->get_state().walking_sfx, 0);
+        if (!failed && !succeed)
+        {
+            g_current_scene->get_state().player->move_up();
+            Mix_PlayChannel(-1, g_current_scene->get_state().walking_sfx, 0);
+            Mix_VolumeChunk(g_current_scene->get_state().walking_sfx, MIX_MAX_VOLUME / 2.0f);
+        }
+        
     }
         
     else if (key_state[SDL_SCANCODE_DOWN])  
     {
-        g_current_scene->get_state().player->move_down();
-        Mix_PlayChannel(-1, g_current_scene->get_state().walking_sfx, 0);
+        if (!failed && !succeed)
+        {
+            g_current_scene->get_state().player->move_down();
+            Mix_PlayChannel(-1, g_current_scene->get_state().walking_sfx, 0);
+            Mix_VolumeChunk(g_current_scene->get_state().walking_sfx, MIX_MAX_VOLUME / 2.0f);
+        }
+        
     }
 
     if (glm::length(g_current_scene->get_state().player->get_movement()) > 1.0f)
@@ -284,6 +329,7 @@ void update()
     while (delta_time >= FIXED_TIMESTEP) {
         // ————— UPDATING THE SCENE (i.e. map, character, enemies...) ————— //
         g_current_scene->update(FIXED_TIMESTEP);
+        g_effects->update(FIXED_TIMESTEP);
 
         delta_time -= FIXED_TIMESTEP;
     }
@@ -294,7 +340,12 @@ void update()
     if (g_current_scene->get_state().player->get_is_defeated() == true)
     {
         failed = true;
-        std::cout << "FAILED" << std::endl;
+        if (death_played == false)
+        {
+            Mix_PlayChannel(1, g_current_scene->get_state().death_sfx, 0);
+            death_played = true;
+        }
+
     }
 
 
@@ -303,27 +354,34 @@ void update()
     if (g_current_scene == g_menu_screen && enter_pressed)
     {
         switch_to_scene(g_levels[1]);
+        g_effects->start(FADEIN, 0.5);
     }
 
 
     if (g_current_scene == g_level_a && g_level_a->get_level_win())
     {
         switch_to_scene(g_levels[2]);
+        g_effects->start(FADEIN, 0.5);
 
     }
 
+    if (g_current_scene == g_level_b && g_level_b->get_level_win())
+    {
+        switch_to_scene(g_levels[3]);
+        g_effects->start(FADEIN, 0.5);
+    }
 
     // ————— PLAYER CAMERA ————— //
     g_view_matrix = glm::mat4(1.0f);
 
-    if (g_current_scene->get_state().player->get_position().x < 30.0f) {
-        g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_current_scene->get_state().player->get_position().x, -g_current_scene->get_state().player->get_position().y, 0));
-    }
-    else {
-        g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-30, -g_current_scene->get_state().player->get_position().y, 0));
-    }
+    //if (g_current_scene->get_state().player->get_position().x < 30.0f) {
+    //    g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_current_scene->get_state().player->get_position().x, -g_current_scene->get_state().player->get_position().y, 0));
+    //}
+    //else {
+    //    g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-30, -g_current_scene->get_state().player->get_position().y, 0));
+    //}
     
-    //g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_current_scene->get_state().player->get_position().x, -g_current_scene->get_state().player->get_position().y, 0));
+    g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_current_scene->get_state().player->get_position().x, -g_current_scene->get_state().player->get_position().y, 0));
     
     
     /*if (g_current_scene->get_state().player->get_position().y > -3.0f) {
@@ -342,9 +400,20 @@ void render()
     // ————— RENDERING THE SCENE (i.e. map, character, enemies...) ————— //
     g_current_scene->render(&g_shader_program);
 
+    g_effects->render();
+
+
+    bool is_player_dead = g_current_scene->get_state().player->get_is_defeated();
+    glUniform1i(is_player_dead_location, is_player_dead ? 1 : 0);
+
     if (g_current_scene->get_state().player->get_is_defeated())
     {
         Utility::draw_text(&g_shader_program, text_texture_id, "YOU LOST :[", 0.3, 0.03f, glm::vec3(g_current_scene->get_state().player->get_position().x-2.0f, g_current_scene->get_state().player->get_position().y, 0.0f));
+    }
+    if (g_level_c->get_level_win())
+    {
+        succeed = true;
+        Utility::draw_text(&g_shader_program, text_texture_id, "YOU WIN :)", 0.3, 0.03f, glm::vec3(g_current_scene->get_state().player->get_position().x - 2.0f, g_current_scene->get_state().player->get_position().y, 0.0f));
     }
 
     g_shader_program.set_light_position_matrix(g_current_scene->get_state().player->get_position());

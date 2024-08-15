@@ -3,7 +3,7 @@
 
 class LevelA : public Scene {
 public:
-    int ENEMY_COUNT = 6;
+    int ENEMY_COUNT = 5;
 
     bool level_win = false;
 
